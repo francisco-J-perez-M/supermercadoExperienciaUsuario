@@ -3,25 +3,18 @@ from tkinter import ttk, messagebox
 from conexion import get_db
 from datetime import datetime
 
-# Crear ventana principal
-root = tk.Tk()
-root.title("Supermercado")
-root.geometry("800x500")
-
-# Conectar a la base de datos
-try:
-    db = get_db()
-    collection_areas = db['areas']
-    collection_productos = db['productos']
-except Exception as e:
-    messagebox.showerror("Error de conexión", f"No se pudo conectar a la base de datos: {str(e)}")
-    exit()
-
 # Variables globales
 areas = []
 productos_por_area = {}
 cuenta_actual = {}
 total_actual = 0
+
+# Estas se asignan en iniciar_app()
+root = None
+db = None
+collection_areas = None
+collection_productos = None
+btn_resumen = None
 
 def cargar_areas():
     """Cargar las áreas desde la base de datos"""
@@ -106,12 +99,10 @@ def atender_cliente():
         return
     
     try:
-        # Obtener cuántos clientes hay ya en la colección
         coleccion_clientes = db['clientes']
         num_clientes = coleccion_clientes.count_documents({})
         nombre_cliente = f"Cliente {num_clientes + 1}"
         
-        # Guardar cliente en la base de datos con la estructura definida
         cliente = {
             "nombre": nombre_cliente,
             "productos": list(cuenta_actual.values()),
@@ -123,7 +114,7 @@ def atender_cliente():
         
         messagebox.showinfo("Éxito", f"{nombre_cliente} atendido por ${total_actual:.2f}")
         
-        # Reiniciar la cuenta
+        # Reiniciar cuenta
         cuenta_actual = {}
         total_actual = 0
         actualizar_cuenta()
@@ -133,13 +124,9 @@ def atender_cliente():
 
 def mostrar_resumen():
     try:
-        # Obtener la fecha de hoy como string en formato "YYYY-MM-DD" para la búsqueda
         hoy_str = datetime.now().strftime('%Y-%m-%d')
-        
-        # Formatear la fecha para mostrar en el resumen (ej: "2024-01-15" → "15/01/2024")
         fecha_formateada = datetime.now().strftime('%d/%m/%Y')
 
-        # Consultar clientes cuya fecha (string) empiece con la fecha de hoy
         clientes_hoy = list(db['clientes'].find({'fecha': {'$regex': f'^{hoy_str}'}}))
 
         if not clientes_hoy:
@@ -155,13 +142,11 @@ def mostrar_resumen():
         resumen += "Detalle de clientes:\n"
 
         for i, cliente in enumerate(clientes_hoy, 1):
-            # Convertir el string de fecha a un objeto datetime para formatear la hora
             fecha_dt = datetime.fromisoformat(cliente['fecha'])
             resumen += f"\n{i}. {cliente['nombre']} - Total: ${cliente['total']:.2f} - {fecha_dt.strftime('%H:%M:%S')}\n"
             for prod in cliente['productos']:
                 resumen += f"   - {prod['nombre']} x{prod['cantidad']}\n"
 
-        # Crear ventana de resumen
         ventana_resumen = tk.Toplevel(root)
         ventana_resumen.title(f"Resumen Diario - {fecha_formateada}")
         ventana_resumen.geometry("500x400")
@@ -175,64 +160,82 @@ def mostrar_resumen():
         messagebox.showerror("Error", f"No se pudo generar el resumen: {str(e)}")
 
 
-# Título
-titulo = tk.Label(root, text="Supermercado", font=("Arial", 20, "bold"))
-titulo.pack(pady=10)
+def iniciar_app(rol_usuario):
+    """Iniciar la aplicación principal según el rol"""
+    global root, db, collection_areas, collection_productos
+    global combo_area, lista_productos, texto_cuenta, btn_resumen
 
-# Frame principal dividido en dos columnas
-frame_principal = tk.Frame(root)
-frame_principal.pack(fill="both", expand=True, padx=20, pady=10)
+    root = tk.Tk()
+    root.title("Supermercado")
+    root.geometry("800x500")
 
-# ---- Columna izquierda: selección de área y productos ----
-frame_izq = tk.Frame(frame_principal)
-frame_izq.pack(side="left", fill="both", expand=True, padx=10)
+    try:
+        db = get_db()
+        collection_areas = db['areas']
+        collection_productos = db['productos']
+    except Exception as e:
+        messagebox.showerror("Error de conexión", f"No se pudo conectar a la base de datos: {str(e)}")
+        exit()
 
-lbl_area = tk.Label(frame_izq, text="Seleccionar área:", font=("Arial", 12))
-lbl_area.pack(anchor="w")
+    # --- UI ---
+    titulo = tk.Label(root, text="Supermercado", font=("Arial", 20, "bold"))
+    titulo.pack(pady=10)
 
-combo_area = ttk.Combobox(frame_izq, state="readonly")
-combo_area.pack(fill="x", pady=5)
-combo_area.bind("<<ComboboxSelected>>", on_area_selected)
+    frame_principal = tk.Frame(root)
+    frame_principal.pack(fill="both", expand=True, padx=20, pady=10)
 
-lbl_productos = tk.Label(frame_izq, text="Productos del área:", font=("Arial", 12))
-lbl_productos.pack(anchor="w", pady=(10, 0))
+    # Izquierda
+    frame_izq = tk.Frame(frame_principal)
+    frame_izq.pack(side="left", fill="both", expand=True, padx=10)
 
-# Frame para la lista de productos con scrollbar
-frame_lista = tk.Frame(frame_izq)
-frame_lista.pack(fill="both", expand=True)
+    lbl_area = tk.Label(frame_izq, text="Seleccionar área:", font=("Arial", 12))
+    lbl_area.pack(anchor="w")
 
-scrollbar = tk.Scrollbar(frame_lista)
-scrollbar.pack(side="right", fill="y")
+    combo_area = ttk.Combobox(frame_izq, state="readonly")
+    combo_area.pack(fill="x", pady=5)
+    combo_area.bind("<<ComboboxSelected>>", on_area_selected)
 
-lista_productos = tk.Listbox(frame_lista, yscrollcommand=scrollbar.set, height=10)
-lista_productos.pack(fill="both", expand=True)
-lista_productos.bind("<Double-Button-1>", on_producto_selected)
+    lbl_productos = tk.Label(frame_izq, text="Productos del área:", font=("Arial", 12))
+    lbl_productos.pack(anchor="w", pady=(10, 0))
 
-scrollbar.config(command=lista_productos.yview)
+    frame_lista = tk.Frame(frame_izq)
+    frame_lista.pack(fill="both", expand=True)
 
-# ---- Columna derecha: cuenta en tiempo real ----
-frame_der = tk.Frame(frame_principal)
-frame_der.pack(side="right", fill="both", expand=True, padx=10)
+    scrollbar = tk.Scrollbar(frame_lista)
+    scrollbar.pack(side="right", fill="y")
 
-lbl_cuenta = tk.Label(frame_der, text="Cuenta en tiempo real:", font=("Arial", 12))
-lbl_cuenta.pack(anchor="w")
+    lista_productos = tk.Listbox(frame_lista, yscrollcommand=scrollbar.set, height=10)
+    lista_productos.pack(fill="both", expand=True)
+    lista_productos.bind("<Double-Button-1>", on_producto_selected)
 
-texto_cuenta = tk.Text(frame_der, height=12, state="disabled")
-texto_cuenta.pack(fill="both", expand=True)
+    scrollbar.config(command=lista_productos.yview)
 
-# ---- Botones ----
-frame_botones = tk.Frame(root)
-frame_botones.pack(pady=10)
+    # Derecha
+    frame_der = tk.Frame(frame_principal)
+    frame_der.pack(side="right", fill="both", expand=True, padx=10)
 
-btn_atender = tk.Button(frame_botones, text="Atender Cliente", width=20, command=atender_cliente)
-btn_atender.pack(side="left", padx=10)
+    lbl_cuenta = tk.Label(frame_der, text="Cuenta en tiempo real:", font=("Arial", 12))
+    lbl_cuenta.pack(anchor="w")
 
-btn_resumen = tk.Button(frame_botones, text="Mostrar Resumen Diario", width=20, command=mostrar_resumen)
-btn_resumen.pack(side="right", padx=10)
+    texto_cuenta = tk.Text(frame_der, height=12, state="disabled")
+    texto_cuenta.pack(fill="both", expand=True)
 
-# Cargar datos iniciales
-cargar_areas()
-actualizar_cuenta()
+    # Botones
+    frame_botones = tk.Frame(root)
+    frame_botones.pack(pady=10)
 
-# Ejecutar aplicación
-root.mainloop()
+    btn_atender = tk.Button(frame_botones, text="Atender Cliente", width=20, command=atender_cliente)
+    btn_atender.pack(side="left", padx=10)
+
+    btn_resumen = tk.Button(frame_botones, text="Mostrar Resumen Diario", width=20, command=mostrar_resumen)
+    btn_resumen.pack(side="right", padx=10)
+
+    # --- Restricciones por rol ---
+    if rol_usuario == "vendedor":
+        btn_resumen.config(state="disabled")
+
+    # Cargar datos iniciales
+    cargar_areas()
+    actualizar_cuenta()
+
+    root.mainloop()
