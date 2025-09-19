@@ -1,0 +1,6 @@
+Para actualizar el archivo *requirements.txt* usar el siguiente comando:
+     pip freeze > requirements.txt
+
+Para instalar todas las libreraias del *requirements.txt* usar el siguiente comando:
+    pip install requirements.txt
+
