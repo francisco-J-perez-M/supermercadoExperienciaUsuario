@@ -1,0 +1,51 @@
+=== ANÁLISIS COMPLETO DEL SUPERMERCADO ===
+
+Fecha del análisis: 2025-09-21 12:48:51
+Total de registros: 500007
+
+Rango de fechas en los datos:
+   - Desde: 2025-08-16
+   - Hasta: 2025-09-21
+
+1. DÍA CON MÁS VENTAS (POR MONTO):
+   - Fecha: 2025-09-06
+   - Total vendido: $8378375.00
+   - Ventas realizadas: 16414
+
+2. PROMEDIO DE CLIENTES POR DÍA:
+   - 14285.91 clientes/día
+
+3. PROMEDIO DE VENTA POR CLIENTE:
+   - $506.16 por cliente
+
+4. PRODUCTOS MÁS VENDIDOS (POR CANTIDAD - TOP 10):
+   1. Leche Entera: 62540 unidades ($1563500.00)
+   2. Shampoo: 62388 unidades ($2807460.00)
+   3. Agua Mineral: 62387 unidades ($623870.00)
+   4. Crema Corporal: 62357 unidades ($3117850.00)
+   5. Limpiador multiusos: 62319 unidades ($1869570.00)
+   6. Arena para gato: 62317 unidades ($4050605.00)
+   7. Pan de Molde: 62306 unidades ($1869180.00)
+   8. Papel higiénico: 62291 unidades ($2367058.00)
+   9. Atún enlatado: 62282 unidades ($1557050.00)
+   10. Frijol: 62255 unidades ($1369610.00)
+
+5. CLIENTES QUE MÁS GASTARON (TOP 10):
+   1. Cliente 93667: $4555.00 (1 compras)
+   2. Cliente 385374: $4438.00 (1 compras)
+   3. Cliente 145394: $4385.00 (1 compras)
+   4. Cliente 449729: $4175.00 (1 compras)
+   5. Cliente 267210: $4165.00 (1 compras)
+   6. Cliente 32968: $4140.00 (1 compras)
+   7. Cliente 496038: $4125.00 (1 compras)
+   8. Cliente 344988: $4060.00 (1 compras)
+   9. Cliente 244113: $4029.00 (1 compras)
+   10. Cliente 454987: $3950.00 (1 compras)
+
+6. ESTADÍSTICAS GENERALES:
+   - Total de ventas: 500007
+   - Ingresos totales: $253082714.00
+   - Ticket promedio: $506.16
+   - Venta máxima: $4555.00
+   - Venta mínima: $7.00
+
