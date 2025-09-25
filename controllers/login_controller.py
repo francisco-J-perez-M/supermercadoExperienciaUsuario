@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
-from conexion import get_db
-import index
+from db.conexion import get_db
+import views.interfaz_terminal as interfaz_terminal
 
 def login():
     usuario = entry_usuario.get().strip()
@@ -20,7 +20,7 @@ def login():
         rol = user["rol"]
         messagebox.showinfo("Bienvenido", f"Usuario: {usuario}\nRol: {rol}")
         root.destroy()  # Cerramos login
-        index.iniciar_app(rol)  # Abrimos la ventana principal con permisos según rol
+        interfaz_terminal.iniciar_app(rol)  # Abrimos la ventana principal con permisos según rol
     else:
         messagebox.showerror("Error", "Usuario o contraseña incorrectos")
 

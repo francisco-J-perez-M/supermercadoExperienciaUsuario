@@ -1,6 +1,6 @@
 import random
 from datetime import datetime, timedelta
-from conexion import get_db
+from db.conexion import get_db
 from pymongo.errors import BulkWriteError
 
 # --------------------------------------------------------------------------------------

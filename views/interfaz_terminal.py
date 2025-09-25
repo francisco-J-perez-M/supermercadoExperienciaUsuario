@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from conexion import get_db
+from db.conexion import get_db
 from datetime import datetime
 
 # Variables globales
