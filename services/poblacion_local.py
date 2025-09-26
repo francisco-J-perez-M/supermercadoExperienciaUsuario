@@ -2,6 +2,7 @@ import random
 from datetime import datetime, timedelta
 from db.conexion import get_db
 from pymongo.errors import BulkWriteError
+from views.componentes.progreso_poblacion import VentanaProgreso
 
 # --------------------------------------------------------------------------------------
 # Función: poblar_usuarios
@@ -123,6 +124,8 @@ def poblar_clientes(n=500_000, batch_size=10_000):
         return
 
     inicio = coleccion_clientes.count_documents({})
+    ventana = VentanaProgreso(n)
+
     for i in range(inicio, n, batch_size):
         batch = [
             generar_cliente(j, productos_db)
@@ -130,9 +133,11 @@ def poblar_clientes(n=500_000, batch_size=10_000):
         ]
         try:
             coleccion_clientes.insert_many(batch, ordered=False)
-            print(f"Insertados {i + len(batch)} / {n} clientes")
+            ventana.actualizar(i + len(batch))
         except BulkWriteError as bwe:
             print("Error en inserción masiva:", bwe.details)
+
+    ventana.cerrar()
 
 # --------------------------------------------------------------------------------------
 # Función: poblar_base_local

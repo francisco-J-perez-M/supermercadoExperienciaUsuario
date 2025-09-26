@@ -19,13 +19,13 @@ def mostrar_ventana_inicio():
     def iniciar_local():
         poblar_base_local()
         messagebox.showinfo("Despliegue Local", "Base de datos local poblada con 500,000 registros.")
-        root.destroy()
+        root.withdraw()  # 👈 Oculta la ventana sin destruirla
         mostrar_login()
 
     def iniciar_servidor():
         poblar_base_servidor()
         messagebox.showinfo("Despliegue Servidor", "Base mínima poblada para pruebas en servidor.")
-        root.destroy()
+        root.withdraw()  # 👈 También aquí
         mostrar_login()
 
     btn_local = ttk.Button(root, text="Despliegue Local", command=iniciar_local, bootstyle="success")
