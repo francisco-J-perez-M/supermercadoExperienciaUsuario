@@ -1,241 +1,101 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
-from db.conexion import get_db
-from datetime import datetime
+from views.tema_bootstrap import crear_ventana
+from views.componentes.area_selector import crear_selector_area
+from views.componentes.product_list import crear_lista_productos
+from views.componentes.cuenta_display import crear_cuenta_display
+from views.componentes.botones import crear_botones
+from controllers.producto_controller import cargar_areas, cargar_productos_por_area
+from controllers.cliente_controller import atender_cliente, obtener_resumen_diario
+from ttkbootstrap import ttk
 
-# Variables globales
+# Variables globales compartidas
 areas = []
 productos_por_area = {}
 cuenta_actual = {}
 total_actual = 0
 
-# Estas se asignan en iniciar_app()
-root = None
-db = None
-collection_areas = None
-collection_productos = None
-btn_resumen = None
-
-def cargar_areas():
-    """Cargar las áreas desde la base de datos"""
-    global areas
-    try:
-        areas_cursor = collection_areas.find().sort('nombre')
-        areas = [area for area in areas_cursor]
-        nombres_areas = [area['nombre'] for area in areas]
-        combo_area['values'] = nombres_areas
-        if nombres_areas:
-            combo_area.current(0)
-            cargar_productos_por_area(0)
-    except Exception as e:
-        messagebox.showerror("Error", f"No se pudieron cargar las áreas: {str(e)}")
-
-def cargar_productos_por_area(indice):
-    """Cargar los productos de un área específica"""
-    global productos_por_area
-    if not areas:
-        return
-    
-    area_seleccionada = areas[indice]
-    area_id = area_seleccionada['_id']
-    
-    try:
-        productos_cursor = collection_productos.find({'area_id': area_id}).sort('nombre')
-        productos_por_area = {prod['_id']: prod for prod in productos_cursor}
-        
-        # Actualizar la lista de productos
-        lista_productos.delete(0, tk.END)
-        for producto in productos_por_area.values():
-            lista_productos.insert(tk.END, f"{producto['nombre']} - ${producto['precio']:.2f}")
-    except Exception as e:
-        messagebox.showerror("Error", f"No se pudieron cargar los productos: {str(e)}")
-
-def on_area_selected(event):
-    """Evento cuando se selecciona un área diferente"""
-    indice_seleccionado = combo_area.current()
-    if indice_seleccionado >= 0:
-        cargar_productos_por_area(indice_seleccionado)
-
-def on_producto_selected(event):
-    """Evento cuando se selecciona un producto"""
-    seleccion = lista_productos.curselection()
-    if seleccion:
-        indice = seleccion[0]
-        producto_id = list(productos_por_area.keys())[indice]
-        producto = productos_por_area[producto_id]
-        
-        # Agregar a la cuenta actual
-        global total_actual
-        if producto_id in cuenta_actual:
-            cuenta_actual[producto_id]['cantidad'] += 1
-        else:
-            cuenta_actual[producto_id] = {
-                'nombre': producto['nombre'],
-                'precio': producto['precio'],
-                'cantidad': 1
-            }
-        
-        total_actual += producto['precio']
-        actualizar_cuenta()
-
-def actualizar_cuenta():
-    """Actualizar la visualización de la cuenta"""
-    texto_cuenta.config(state="normal")
-    texto_cuenta.delete(1.0, tk.END)
-    
-    for producto_id, datos in cuenta_actual.items():
-        texto_cuenta.insert(tk.END, 
-                           f"{datos['nombre']} x{datos['cantidad']} - ${datos['precio'] * datos['cantidad']:.2f}\n")
-    
-    texto_cuenta.insert(tk.END, f"\nTotal: ${total_actual:.2f}")
-    texto_cuenta.config(state="disabled")
-
-def atender_cliente():
-    """Finalizar la atención del cliente y guardar en clientes"""
-    global cuenta_actual, total_actual
-    
-    if not cuenta_actual:
-        messagebox.showwarning("Atención", "No hay productos en la cuenta")
-        return
-    
-    try:
-        coleccion_clientes = db['clientes']
-        num_clientes = coleccion_clientes.count_documents({})
-        nombre_cliente = f"Cliente {num_clientes + 1}"
-        
-        cliente = {
-            "nombre": nombre_cliente,
-            "productos": list(cuenta_actual.values()),
-            "total": total_actual,
-            "fecha": datetime.now().isoformat()
-        }
-        
-        coleccion_clientes.insert_one(cliente)
-        
-        messagebox.showinfo("Éxito", f"{nombre_cliente} atendido por ${total_actual:.2f}")
-        
-        # Reiniciar cuenta
-        cuenta_actual = {}
-        total_actual = 0
-        actualizar_cuenta()
-        
-    except Exception as e:
-        messagebox.showerror("Error", f"No se pudo registrar el cliente: {str(e)}")
-
-def mostrar_resumen():
-    try:
-        hoy_str = datetime.now().strftime('%Y-%m-%d')
-        fecha_formateada = datetime.now().strftime('%d/%m/%Y')
-
-        clientes_hoy = list(db['clientes'].find({'fecha': {'$regex': f'^{hoy_str}'}}))
-
-        if not clientes_hoy:
-            messagebox.showinfo("Resumen Diario", f"No hay clientes atendidos el día {fecha_formateada}")
-            return
-
-        total_diario = sum(cliente['total'] for cliente in clientes_hoy)
-        cantidad_ventas = len(clientes_hoy)
-
-        resumen = f"RESUMEN DEL DÍA: {fecha_formateada}\n\n"
-        resumen += f"Clientes atendidos: {cantidad_ventas}\n"
-        resumen += f"Total vendido: ${total_diario:.2f}\n\n"
-        resumen += "Detalle de clientes:\n"
-
-        for i, cliente in enumerate(clientes_hoy, 1):
-            fecha_dt = datetime.fromisoformat(cliente['fecha'])
-            resumen += f"\n{i}. {cliente['nombre']} - Total: ${cliente['total']:.2f} - {fecha_dt.strftime('%H:%M:%S')}\n"
-            for prod in cliente['productos']:
-                resumen += f"   - {prod['nombre']} x{prod['cantidad']}\n"
-
-        ventana_resumen = tk.Toplevel(root)
-        ventana_resumen.title(f"Resumen Diario - {fecha_formateada}")
-        ventana_resumen.geometry("500x400")
-
-        texto_resumen = tk.Text(ventana_resumen, wrap=tk.WORD)
-        texto_resumen.pack(fill="both", expand=True, padx=10, pady=10)
-        texto_resumen.insert(1.0, resumen)
-        texto_resumen.config(state="disabled")
-
-    except Exception as e:
-        messagebox.showerror("Error", f"No se pudo generar el resumen: {str(e)}")
-
-
 def iniciar_app(rol_usuario):
-    """Iniciar la aplicación principal según el rol"""
-    global root, db, collection_areas, collection_productos
-    global combo_area, lista_productos, texto_cuenta, btn_resumen
+    global areas, productos_por_area, cuenta_actual, total_actual
 
-    root = tk.Tk()
-    root.title("Supermercado")
-    root.geometry("800x500")
+    root = crear_ventana("Supermercado", "800x500", "flatly")
 
-    try:
-        db = get_db()
-        collection_areas = db['areas']
-        collection_productos = db['productos']
-    except Exception as e:
-        messagebox.showerror("Error de conexión", f"No se pudo conectar a la base de datos: {str(e)}")
-        exit()
+    # --- Área izquierda ---
+    frame_izq = ttk.Frame(root)
+    frame_izq.pack(side="left", fill="both", expand=True, padx=10, pady=10)
 
-    # --- UI ---
-    titulo = tk.Label(root, text="Supermercado", font=("Arial", 20, "bold"))
-    titulo.pack(pady=10)
+    combo_area = crear_selector_area(frame_izq, None)
+    lista_productos = crear_lista_productos(frame_izq, None)
 
-    frame_principal = tk.Frame(root)
-    frame_principal.pack(fill="both", expand=True, padx=20, pady=10)
+    # --- Área derecha ---
+    frame_der = ttk.Frame(root)
+    frame_der.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
-    # Izquierda
-    frame_izq = tk.Frame(frame_principal)
-    frame_izq.pack(side="left", fill="both", expand=True, padx=10)
+    texto_cuenta = crear_cuenta_display(frame_der)
 
-    lbl_area = tk.Label(frame_izq, text="Seleccionar área:", font=("Arial", 12))
-    lbl_area.pack(anchor="w")
+    # --- Botones ---
+    crear_botones(root,
+                  lambda: on_atender(texto_cuenta),
+                  lambda: on_resumen(root),
+                  rol_usuario)
 
-    combo_area = ttk.Combobox(frame_izq, state="readonly")
-    combo_area.pack(fill="x", pady=5)
-    combo_area.bind("<<ComboboxSelected>>", on_area_selected)
+    # --- Asignar eventos después de crear widgets ---
+    combo_area.bind("<<ComboboxSelected>>", lambda e: on_area_selected(combo_area, lista_productos))
+    lista_productos.bind("<Double-Button-1>", lambda e: on_producto_selected(lista_productos, texto_cuenta))
 
-    lbl_productos = tk.Label(frame_izq, text="Productos del área:", font=("Arial", 12))
-    lbl_productos.pack(anchor="w", pady=(10, 0))
+    # --- Cargar datos iniciales ---
+    areas = cargar_areas()
+    if areas:
+        combo_area["values"] = [a["nombre"] for a in areas]
+        combo_area.current(0)
+        cargar_productos_por_area_index(0, lista_productos)
 
-    frame_lista = tk.Frame(frame_izq)
-    frame_lista.pack(fill="both", expand=True)
-
-    scrollbar = tk.Scrollbar(frame_lista)
-    scrollbar.pack(side="right", fill="y")
-
-    lista_productos = tk.Listbox(frame_lista, yscrollcommand=scrollbar.set, height=10)
-    lista_productos.pack(fill="both", expand=True)
-    lista_productos.bind("<Double-Button-1>", on_producto_selected)
-
-    scrollbar.config(command=lista_productos.yview)
-
-    # Derecha
-    frame_der = tk.Frame(frame_principal)
-    frame_der.pack(side="right", fill="both", expand=True, padx=10)
-
-    lbl_cuenta = tk.Label(frame_der, text="Cuenta en tiempo real:", font=("Arial", 12))
-    lbl_cuenta.pack(anchor="w")
-
-    texto_cuenta = tk.Text(frame_der, height=12, state="disabled")
-    texto_cuenta.pack(fill="both", expand=True)
-
-    # Botones
-    frame_botones = tk.Frame(root)
-    frame_botones.pack(pady=10)
-
-    btn_atender = tk.Button(frame_botones, text="Atender Cliente", width=20, command=atender_cliente)
-    btn_atender.pack(side="left", padx=10)
-
-    btn_resumen = tk.Button(frame_botones, text="Mostrar Resumen Diario", width=20, command=mostrar_resumen)
-    btn_resumen.pack(side="right", padx=10)
-
-    # --- Restricciones por rol ---
-    if rol_usuario == "vendedor":
-        btn_resumen.config(state="disabled")
-
-    # Cargar datos iniciales
-    cargar_areas()
-    actualizar_cuenta()
+    actualizar_cuenta(texto_cuenta)
 
     root.mainloop()
+
+def cargar_productos_por_area_index(indice, lista_widget):
+    global productos_por_area
+    area_id = areas[indice]["_id"]
+    productos = cargar_productos_por_area(area_id)
+    productos_por_area = {i: p for i, p in enumerate(productos)}
+    lista_widget.delete(0, "end")
+    for p in productos:
+        lista_widget.insert("end", f"{p['nombre']} - ${p['precio']:.2f}")
+
+def on_area_selected(combo, lista_widget):
+    indice = combo.current()
+    if indice >= 0:
+        cargar_productos_por_area_index(indice, lista_widget)
+
+def on_producto_selected(lista, texto_widget):
+    global cuenta_actual, total_actual
+    seleccion = lista.curselection()
+    if seleccion:
+        indice = seleccion[0]
+        producto = productos_por_area[indice]
+        pid = producto["nombre"]
+        if pid in cuenta_actual:
+            cuenta_actual[pid]["cantidad"] += 1
+        else:
+            cuenta_actual[pid] = {
+                "nombre": producto["nombre"],
+                "precio": producto["precio"],
+                "cantidad": 1
+            }
+        total_actual += producto["precio"]
+        actualizar_cuenta(texto_widget)
+
+def actualizar_cuenta(texto_widget):
+    texto_widget.config(state="normal")
+    texto_widget.delete(1.0, "end")
+    for datos in cuenta_actual.values():
+        texto_widget.insert("end", f"{datos['nombre']} x{datos['cantidad']} - ${datos['precio'] * datos['cantidad']:.2f}\n")
+    texto_widget.insert("end", f"\nTotal: ${total_actual:.2f}")
+    texto_widget.config(state="disabled")
+
+def on_atender(texto_widget):
+    atender_cliente(cuenta_actual, total_actual, None, lambda: actualizar_cuenta(texto_widget))
+
+def on_resumen(root):
+    clientes = obtener_resumen_diario()
+    from views.componentes.resumen_diario import mostrar_resumen
+    mostrar_resumen(root, clientes)
