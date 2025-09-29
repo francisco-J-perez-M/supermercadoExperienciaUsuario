@@ -33,9 +33,10 @@ def iniciar_app(rol_usuario):
 
     # --- Botones ---
     crear_botones(root,
-                  lambda: on_atender(texto_cuenta),
-                  lambda: on_resumen(root),
-                  rol_usuario)
+            lambda: on_atender(texto_cuenta),
+            lambda: on_resumen(root),
+            rol_usuario)
+
 
     # --- Asignar eventos después de crear widgets ---
     combo_area.bind("<<ComboboxSelected>>", lambda e: on_area_selected(combo_area, lista_productos))
