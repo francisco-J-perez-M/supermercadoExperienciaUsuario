@@ -1,14 +1,20 @@
-from ttkbootstrap import ttk
+import customtkinter as ctk
+from estilos.paleta_colores import COLORES
+from estilos.fuentes import FUENTES
 
 def crear_botones(parent, on_atender_callback, on_resumen_callback, rol_usuario):
-    frame = ttk.Frame(parent)
+    frame = ctk.CTkFrame(parent, fg_color="transparent")
     frame.pack(pady=10)
 
-    btn_atender = ttk.Button(frame, text="Atender Cliente", width=20, command=on_atender_callback, bootstyle="success")
+    btn_atender = ctk.CTkButton(frame, text="Atender Cliente", command=on_atender_callback,
+                                font=FUENTES["boton"], fg_color=COLORES["dorado"],
+                                text_color=COLORES["texto_oscuro"], corner_radius=10)
     btn_atender.pack(side="left", padx=10)
 
-    btn_resumen = ttk.Button(frame, text="Mostrar Resumen Diario", width=20, command=on_resumen_callback, bootstyle="info")
+    btn_resumen = ctk.CTkButton(frame, text="Resumen Diario", command=on_resumen_callback,
+                                font=FUENTES["boton"], fg_color=COLORES["dorado"],
+                                text_color=COLORES["texto_oscuro"], corner_radius=10)
     btn_resumen.pack(side="right", padx=10)
 
     if rol_usuario == "vendedor":
-        btn_resumen.config(state="disabled")
+        btn_resumen.configure(state="disabled")

@@ -1,20 +1,28 @@
-from ttkbootstrap import ttk
-import tkinter as tk
+import customtkinter as ctk
+from estilos.paleta_colores import COLORES
+from estilos.fuentes import FUENTES
 
-def crear_lista_productos(parent, on_double_click_callback):
-    label = ttk.Label(parent, text="Productos del área:", font=("Arial", 12))
+def crear_lista_productos(parent, on_agregar_callback):
+    label = ctk.CTkLabel(parent, text="Productos del área:", font=FUENTES["etiqueta"], text_color=COLORES["dorado"])
     label.pack(anchor="w", pady=(10, 0))
 
-    frame_lista = ttk.Frame(parent)
-    frame_lista.pack(fill="both", expand=True)
+    lista_frame = ctk.CTkScrollableFrame(parent, fg_color=COLORES["campo_fondo"], corner_radius=10)
+    lista_frame.pack(fill="both", expand=True, pady=5)
 
-    scrollbar = ttk.Scrollbar(frame_lista)
-    scrollbar.pack(side="right", fill="y")
+    def agregar_producto(nombre, precio):
+        fila = ctk.CTkFrame(lista_frame, fg_color="transparent")
+        fila.pack(fill="x", padx=5, pady=2)
 
-    lista = tk.Listbox(frame_lista, yscrollcommand=scrollbar.set, height=10)
-    lista.pack(fill="both", expand=True)
-    lista.bind("<Double-Button-1>", on_double_click_callback)
+        etiqueta = ctk.CTkLabel(fila, text=f"{nombre} - ${precio:.2f}", font=FUENTES["entrada"], text_color="white")
+        etiqueta.pack(side="left", padx=5)
 
-    scrollbar.config(command=lista.yview)
+        btn_agregar = ctk.CTkButton(fila, text="Agregar", font=FUENTES["boton"],
+                                    fg_color=COLORES["dorado"], text_color=COLORES["texto_oscuro"],
+                                    corner_radius=8,
+                                    command=lambda: on_agregar_callback(nombre, precio))
+        btn_agregar.pack(side="right", padx=5)
 
-    return lista
+    lista_frame.agregar_producto = agregar_producto
+    lista_frame.limpiar = lambda: [w.destroy() for w in lista_frame.winfo_children()]
+
+    return lista_frame

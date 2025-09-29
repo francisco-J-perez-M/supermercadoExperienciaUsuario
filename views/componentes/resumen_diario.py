@@ -1,12 +1,13 @@
-from ttkbootstrap import ttk
-import tkinter as tk
+import customtkinter as ctk
+from estilos.paleta_colores import COLORES
+from estilos.fuentes import FUENTES
 from datetime import datetime
+from tkinter import messagebox
 
 def mostrar_resumen(root, clientes_hoy):
     fecha_formateada = datetime.now().strftime('%d/%m/%Y')
 
     if not clientes_hoy:
-        from tkinter import messagebox
         messagebox.showinfo("Resumen Diario", f"No hay clientes atendidos el día {fecha_formateada}")
         return
 
@@ -24,11 +25,14 @@ def mostrar_resumen(root, clientes_hoy):
         for prod in cliente['productos']:
             resumen += f"   - {prod['nombre']} x{prod['cantidad']}\n"
 
-    ventana = tk.Toplevel(root)
+    ventana = ctk.CTkToplevel(root)
     ventana.title(f"Resumen Diario - {fecha_formateada}")
     ventana.geometry("500x400")
+    ventana.configure(fg_color=COLORES["fondo_principal"])
 
-    texto = tk.Text(ventana, wrap=tk.WORD)
+    texto = ctk.CTkTextbox(ventana, wrap="word", font=FUENTES["entrada"],
+                           fg_color=COLORES["campo_fondo"], text_color="white",
+                           corner_radius=10)
     texto.pack(fill="both", expand=True, padx=10, pady=10)
-    texto.insert(1.0, resumen)
-    texto.config(state="disabled")
+    texto.insert("1.0", resumen)
+    texto.configure(state="disabled")
