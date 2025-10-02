@@ -3,6 +3,7 @@ __pycache__/
 .pytest_cache/
 venv/
 .venv/
+views\componentes\__pycache__
 
 # Ignora todas las carpetas de caché de Python
 __pycache__/ 

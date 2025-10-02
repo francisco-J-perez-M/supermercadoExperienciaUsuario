@@ -4,6 +4,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import avg, sum, count, col, desc, explode, date_format, max, min, countDistinct
 from pyspark.sql.types import DateType, TimestampType
 import datetime
+import csv
 
 def realizar_analisis_completo():
     try:
@@ -145,13 +146,27 @@ def realizar_analisis_completo():
         messagebox.showerror("Error", error_msg)
 
 def exportar_resultados():
-    """Exportar resultados a un archivo de texto"""
+    """Exportar resultados a un archivo CSV"""
     try:
-        contenido = resultado_area.get(1.0, tk.END)
-        if contenido.strip():
-            with open("analisis_supermercado.txt", "w", encoding="utf-8") as f:
-                f.write(contenido)
-            messagebox.showinfo("Éxito", "Resultados exportados a 'analisis_supermercado.txt'")
+        contenido = resultado_area.get(1.0, tk.END).strip()
+        if contenido:
+            # Dividir el contenido en líneas
+            lineas = contenido.split("\n")
+
+            with open("analisis_supermercado.csv", "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+
+                for linea in lineas:
+                    if linea.strip():
+                        # Separar por ":" para hacer columnas simples (clave, valor)
+                        if ":" in linea:
+                            partes = [p.strip() for p in linea.split(":", 1)]
+                            writer.writerow(partes)
+                        else:
+                            # Si no hay ":", guardar la línea completa en una sola celda
+                            writer.writerow([linea])
+
+            messagebox.showinfo("Éxito", "Resultados exportados a 'analisis_supermercado.csv'")
         else:
             messagebox.showwarning("Advertencia", "No hay resultados para exportar. Ejecuta el análisis primero.")
     except Exception as e:
@@ -217,21 +232,6 @@ btn_exportar.grid(row=0, column=2, padx=5)
 resultado_area = scrolledtext.ScrolledText(main_frame, width=120, height=35, 
                                           font=("Consolas", 10))
 resultado_area.grid(row=2, column=0, pady=10, sticky=(tk.W, tk.E, tk.N, tk.S))
-
-# Información
-info_text = """INSTRUCCIONES:
-1. Primero haz clic en 'Probar Conexión MongoDB' para verificar la conexión
-2. Luego haz clic en 'Realizar Análisis Completo'
-3. Si todo funciona, puedes exportar los resultados
-
-ESTRUCTURA ESPERADA DE DATOS:
-- nombre: String (Nombre del cliente)
-- productos: Array (Productos comprados con nombre, precio, cantidad)
-- total: Number (Monto total de la compra)
-- fecha: String (Fecha en formato ISO)
-"""
-info_label = ttk.Label(main_frame, text=info_text, foreground="green", justify=tk.LEFT)
-info_label.grid(row=3, column=0, pady=5, sticky=tk.W)
 
 # Configurar expansión
 main_frame.columnconfigure(0, weight=1)
