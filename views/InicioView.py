@@ -74,10 +74,7 @@ class InicioView:
 
         funciones = [
             "• Punto de venta",
-            "• Gestión de inventario",
             "• Análisis de datos con Spark",
-            "• Resumen de ventas diarias",
-            "• Gestión de usuarios"
         ]
 
         for funcion in funciones:
