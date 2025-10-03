@@ -22,6 +22,8 @@ class SparkController:
                 .config("spark.mongodb.input.uri", "mongodb://localhost:27017/supermercado_db.clientes") \
                 .config("spark.mongodb.output.uri", "mongodb://localhost:27017/supermercado_db.clientes") \
                 .config("spark.jars.packages", "org.mongodb.spark:mongo-spark-connector_2.12:3.0.1") \
+                .config("spark.sql.adaptive.enabled", "false") \
+                .config("spark.sql.shuffle.partitions", "4") \
                 .getOrCreate()
             return True
         except Exception as e:
