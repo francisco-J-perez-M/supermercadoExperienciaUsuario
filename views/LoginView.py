@@ -2,9 +2,9 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 from ui_helper import UIHelper
+from tkinter import ttk
 
 class RegistroDialog(simpledialog.Dialog):
-    """Diálogo simple para registro de usuario"""
     ROLES = ["vendedor", "administrador", "cajero", "supervisor"]
 
     def __init__(self, parent, controller):
@@ -24,7 +24,7 @@ class RegistroDialog(simpledialog.Dialog):
 
         tk.Label(master, text="Rol:", bg=UIHelper.COLOR_SECUNDARIO, fg=UIHelper.COLOR_TEXTO).grid(row=2, column=0, sticky="w", padx=8, pady=6)
         self.rol_var = tk.StringVar(value="vendedor")
-        tk.OptionMenu(master, self.rol_var, *self.ROLES).grid(row=2, column=1, padx=8, pady=6)
+        ttk.Combobox(master, values=self.ROLES, textvariable=self.rol_var, state="readonly").grid(row=2, column=1, padx=8, pady=6)
 
         return None
 
@@ -47,6 +47,11 @@ class RegistroDialog(simpledialog.Dialog):
         }
 
 class LoginView:
+    """
+    Vista de login. Esta vista se mostrará sólo después de que AvisoBase haya sido despachado
+    (si la BD no estaba presente) o inmediatamente si la BD ya existía.
+    """
+
     def __init__(self, root, controller):
         self.root = root
         self.controller = controller
@@ -55,11 +60,16 @@ class LoginView:
 
     def crear_vista_login(self):
         self.root.title("Login - Supermercado")
-        self.root.geometry("350x260")
+        self.root.geometry("380x280")
         self.root.config(bg=UIHelper.COLOR_PRIMARIO)
+        # Asegurar que la ventana root esté visible
+        try:
+            self.root.deiconify()
+        except Exception:
+            pass
 
         frame = tk.Frame(self.root, bg=UIHelper.COLOR_SECUNDARIO, bd=2, relief="ridge")
-        frame.place(relx=0.5, rely=0.5, anchor="center", width=300, height=220)
+        frame.place(relx=0.5, rely=0.5, anchor="center", width=340, height=240)
 
         lbl_titulo = tk.Label(frame, text="🔑 Iniciar Sesión",
                              font=("Segoe UI", 14, "bold"),
@@ -76,7 +86,7 @@ class LoginView:
                                      relief="flat",
                                      bd=0)
         self.entry_usuario.pack(fill="x", padx=20, pady=4)
-        self.entry_usuario.bind('<Return>', lambda e: self.controller.login())
+        self.entry_usuario.bind('<Return>', lambda e: self.controller.intentar_login())
 
         lbl_password = tk.Label(frame, text="Contraseña:", bg=UIHelper.COLOR_SECUNDARIO, fg=UIHelper.COLOR_TEXTO, anchor="w")
         lbl_password.pack(fill="x", padx=20)
@@ -87,12 +97,12 @@ class LoginView:
                                       relief="flat",
                                       bd=0)
         self.entry_password.pack(fill="x", padx=20, pady=4)
-        self.entry_password.bind('<Return>', lambda e: self.controller.login())
+        self.entry_password.bind('<Return>', lambda e: self.controller.intentar_login())
 
         btn_frame = tk.Frame(frame, bg=UIHelper.COLOR_SECUNDARIO)
-        btn_frame.pack(pady=8, fill="x", padx=20)
+        btn_frame.pack(pady=6, fill="x", padx=20)
 
-        btn_login = tk.Button(btn_frame, text="Ingresar", command=self.controller.login)
+        btn_login = tk.Button(btn_frame, text="Ingresar", command=self.controller.intentar_login)
         UIHelper.estilizar_boton(btn_login)
         btn_login.pack(side="left", expand=True, fill="x", padx=(0,6))
 
@@ -107,10 +117,8 @@ class LoginView:
         if not dlg.result:
             return
         data = dlg.result
-        # Delegar al controlador para crear usuario
         ok = self.controller.registrar_usuario(data["usuario"], data["password"], data.get("rol", "vendedor"))
         if ok:
-            # autocompletar campos para facilitar login
             self.entry_usuario.delete(0, tk.END)
             self.entry_usuario.insert(0, data["usuario"])
             self.entry_password.delete(0, tk.END)
@@ -132,4 +140,7 @@ class LoginView:
         self.limpiar_campos()
 
     def cerrar_vista(self):
-        self.root.destroy()
+        try:
+            self.root.destroy()
+        except Exception:
+            pass
