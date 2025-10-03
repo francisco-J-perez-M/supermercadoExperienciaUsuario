@@ -1,0 +1,5 @@
+bcrypt==5.0.0
+dnspython==2.8.0
+py4j==0.10.9.5
+pymongo==4.15.2
+pyspark==3.2.2

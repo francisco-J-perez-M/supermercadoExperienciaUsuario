@@ -1,0 +1,42 @@
+=== ANÁLISIS COMPLETO DEL SUPERMERCADO ===
+Fecha del análisis,2025-10-03 14:49:47
+Total de registros,1000000
+Rango de fechas en los datos,
+- Desde,2025-09-02
+- Hasta,2025-10-03
+1. DÍA CON MÁS VENTAS (POR MONTO),
+- Fecha,2025-09-15
+- Total vendido,$16667011.00
+- Ventas realizadas,32584
+2. PROMEDIO DE CLIENTES POR DÍA,
+   - 31250.00 clientes/día
+3. PROMEDIO DE VENTA POR CLIENTE,
+   - $507.82 por cliente
+4. PRODUCTOS MÁS VENDIDOS (TOP 10),
+1. Croissants,125519 unidades ($2510380.00)
+2. Pastelillos,124753 unidades ($6237650.00)
+3. Papas a la Francesa Congeladas,124505 unidades ($5602725.00)
+4. Desodorante,124467 unidades ($4356345.00)
+5. Nuggets de Pollo,124409 unidades ($6842495.00)
+6. Tomate,124394 unidades ($995152.00)
+7. Trapos,124349 unidades ($2486980.00)
+8. Crema Corporal,124337 unidades ($6216850.00)
+9. Mouse Inalámbrico,124280 unidades ($18642000.00)
+10. Pollo Entero,124262 unidades ($11183580.00)
+5. CLIENTES QUE MÁS GASTARON (TOP 10),
+1. Cliente 126645,$6340.00 (2 compras)
+2. Cliente 186709,$6330.00 (2 compras)
+3. Cliente 57477,$5808.00 (2 compras)
+4. Cliente 216656,$5706.00 (2 compras)
+5. Cliente 291062,$5695.00 (2 compras)
+6. Cliente 131117,$5625.00 (2 compras)
+7. Cliente 133517,$5616.00 (2 compras)
+8. Cliente 337080,$5610.00 (2 compras)
+9. Cliente 57838,$5560.00 (2 compras)
+10. Cliente 472272,$5560.00 (2 compras)
+6. ESTADÍSTICAS GENERALES,
+- Total de ventas,1000000
+- Ingresos totales,$507821067.00
+- Ticket promedio,$507.82
+- Venta máxima,$4820.00
+- Venta mínima,$7.00
