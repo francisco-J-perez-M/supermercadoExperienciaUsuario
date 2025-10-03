@@ -1,3 +1,4 @@
+# script.py
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -6,6 +7,31 @@ import random
 from datetime import datetime, timedelta
 from db.conexion import get_db
 
+# Seguridad para passwords
+import bcrypt
+
+# --------------------------------------------------------------------------------------
+# Helpers
+# --------------------------------------------------------------------------------------
+def _hash_password(password: str) -> bytes:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+
+def _ensure_usuario_key_and_index(collection):
+    # Normalizar documentos que no tengan usuario_key
+    try:
+        collection.update_many(
+            {"$or": [{"usuario_key": {"$exists": False}}, {"usuario_key": None}]},
+            [{"$set": {"usuario_key": {"$toLower": {"$ifNull": ["$usuario", ""]}}}}]
+        )
+    except Exception as e:
+        print("⚠️ Warning al normalizar usuario_key:", e)
+
+    # Crear índice único parcial para usuario_key (evita fallar por documentos con usuario_key nulo)
+    try:
+        collection.create_index("usuario_key", unique=True, partialFilterExpression={"usuario_key": {"$exists": True, "$ne": None}})
+    except Exception as e:
+        print("⚠️ Warning al crear índice usuario_key único:", e)
+
 # --------------------------------------------------------------------------------------
 # 1. Conectar a la base de datos
 # --------------------------------------------------------------------------------------
@@ -13,15 +39,36 @@ db = get_db()
 print("✅ Conexión a la base de datos establecida.")
 
 # --------------------------------------------------------------------------------------
-# 2. Poblar la colección 'usuarios'
+# 2. Poblar la colección 'usuarios' (contraseñas hasheadas, usuario_key normalizado)
 # --------------------------------------------------------------------------------------
 usuarios = db["usuarios"]
-usuarios.insert_many([
-    {"usuario": "admin", "password": "1234", "rol": "administrador"},
-    {"usuario": "vendedor1", "password": "1234", "rol": "vendedor"},
-    {"usuario": "vendedor2", "password": "1234", "rol": "vendedor"},
-])
-print("✅ Colección 'usuarios' poblada.")
+
+# Normalizar existentes y asegurar índice de forma segura
+_ensure_usuario_key_and_index(usuarios)
+
+# Usuarios a insertar/actualizar (misma contraseña '1234' pero guardada hasheada)
+default_password = "1234"
+password_hash = _hash_password(default_password)
+
+seed_users = [
+    {"usuario": "admin", "rol": "administrador"},
+    {"usuario": "vendedor1", "rol": "vendedor"},
+    {"usuario": "vendedor2", "rol": "vendedor"},
+]
+
+for u in seed_users:
+    usuario_key = u["usuario"].lower()
+    doc = {
+        "usuario": u["usuario"],
+        "usuario_key": usuario_key,
+        "password_hash": password_hash,
+        "rol": u["rol"],
+        "created_at": datetime.utcnow()
+    }
+    # upsert para evitar duplicados y dejar consistencia
+    usuarios.replace_one({"usuario_key": usuario_key}, doc, upsert=True)
+
+print("✅ Colección 'usuarios' poblada (contraseñas hasheadas).")
 
 # --------------------------------------------------------------------------------------
 # 3. Poblar las colecciones 'areas' y 'productos'
