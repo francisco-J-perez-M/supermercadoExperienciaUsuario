@@ -1,14 +1,15 @@
 # AvisoBase.py
 import tkinter as tk
-from tkinter import ttk, simpledialog, messagebox
+from tkinter import messagebox, simpledialog
 from ui_helper import UIHelper
 
 class AvisoBase(tk.Toplevel):
     """
-    Ventana separada que muestra el aviso de BD ausente y ofrece:
+    Ventana separada que informa que la BD no existe y permite:
       - Cargar default (500000)
-      - Seleccionar cantidad
-      - Iniciar creación en terminal (delegando en el controlador)
+      - Seleccionar cantidad total
+      - Cancelar y cerrar (mostrar login)
+    Llama a controller.start_seed_default o controller.start_seed_with_total.
     """
     def __init__(self, parent, controller, default_total=500_000):
         super().__init__(parent)
@@ -20,7 +21,6 @@ class AvisoBase(tk.Toplevel):
         self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
-
         self._build_ui()
 
     def _build_ui(self):
@@ -28,7 +28,7 @@ class AvisoBase(tk.Toplevel):
         frame.pack(expand=True, fill="both", padx=12, pady=12)
 
         lbl = tk.Label(frame,
-                       text="No se encontraron las colecciones iniciales.\nPuedes crear la base de datos ahora.",
+                       text="No se encontraron las colecciones iniciales.\nDebes crear la base de datos antes de usar la aplicación.",
                        bg=UIHelper.COLOR_SECUNDARIO,
                        fg=UIHelper.COLOR_TEXTO,
                        font=("Segoe UI", 11),
@@ -42,16 +42,9 @@ class AvisoBase(tk.Toplevel):
                         font=("Segoe UI", 9, "italic"))
         hint.pack(anchor="w", pady=(0,8))
 
-        btn_default = tk.Button(frame,
-                                text=f"Cargar default ({self.default_total})",
-                                command=self._on_default,
-                                anchor="w")
-        btn_select = tk.Button(frame,
-                               text="Seleccionar cantidad total",
-                               command=self._on_select,
-                               anchor="w")
+        btn_default = tk.Button(frame, text=f"Cargar default ({self.default_total})", command=self._on_default)
+        btn_select = tk.Button(frame, text="Seleccionar cantidad total", command=self._on_select)
 
-        from functools import partial
         UIHelper.estilizar_boton(btn_default, bg=UIHelper.COLOR_ACENTO)
         UIHelper.estilizar_boton(btn_select, bg=UIHelper.COLOR_TERCIARIO)
         btn_default.pack(fill="x", pady=4)
@@ -66,10 +59,14 @@ class AvisoBase(tk.Toplevel):
     def _on_default(self):
         if not messagebox.askyesno("Confirmar", f"Crear base de datos con {self.default_total} registros. ¿Continuar?", parent=self):
             return
-        # delegar al controlador: iniciar seed en terminal (no bloqueante)
-        self.controller._start_seed_in_terminal(self.default_total)
-        messagebox.showinfo("Iniciado", "La creación ha sido iniciada en la terminal.", parent=self)
-        self._on_close()
+        if hasattr(self.controller, "start_seed_default"):
+            self.controller.start_seed_default()
+        else:
+            # retrocompatibilidad
+            if hasattr(self.controller, "_start_seed_in_terminal"):
+                self.controller._start_seed_in_terminal(self.default_total)
+        messagebox.showinfo("Iniciado", "Se inició la creación. Verás una ventana de progreso.", parent=self)
+        self._on_close(started=True)
 
     def _on_select(self):
         respuesta = simpledialog.askstring("Poblado inicial", "Número total de clientes a generar (ej. 500000):", parent=self)
@@ -84,13 +81,24 @@ class AvisoBase(tk.Toplevel):
             return
         if not messagebox.askyesno("Confirmar", f"Crear base de datos con {total} registros. ¿Continuar?", parent=self):
             return
-        self.controller._start_seed_in_terminal(total)
-        messagebox.showinfo("Iniciado", "La creación ha sido iniciada en la terminal.", parent=self)
-        self._on_close()
+        if hasattr(self.controller, "start_seed_with_total"):
+            self.controller.start_seed_with_total(total)
+        else:
+            if hasattr(self.controller, "_start_seed_in_terminal"):
+                self.controller._start_seed_in_terminal(total)
+        messagebox.showinfo("Iniciado", "Se inició la creación. Verás una ventana de progreso.", parent=self)
+        self._on_close(started=True)
 
-    def _on_close(self):
+    def _on_close(self, started: bool = False):
         try:
             self.grab_release()
         except Exception:
             pass
         self.destroy()
+        # Si el usuario cerró sin iniciar el seed, mostrar login
+        if not started:
+            try:
+                if hasattr(self.controller, "_show_login"):
+                    self.controller._show_login()
+            except Exception:
+                pass
