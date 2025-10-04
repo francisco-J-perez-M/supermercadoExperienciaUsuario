@@ -33,7 +33,7 @@ class InicioView:
     # -------------------------------------------------------------------------
     def _crear_menu_lateral(self, usuario, rol):
         lbl_usuario = tk.Label(self.menu_frame,
-                              text=f"👤 {usuario}\nRol: {rol}",
+                              text=f"{usuario}\nRol: {rol}",
                               bg=UIHelper.COLOR_SECUNDARIO,
                               fg=UIHelper.COLOR_TEXTO,
                               font=("Segoe UI", 11, "bold"),
@@ -41,9 +41,9 @@ class InicioView:
         lbl_usuario.pack(pady=15, anchor="w", padx=10)
 
         opciones = [
-            ("🏠 Inicio", self.controller.mostrar_inicio),
-            ("📦 Punto de venta", self.controller.mostrar_punto_venta),
-            ("📂 Análisis Spark", self.controller.mostrar_analisis_spark),
+            ("Inicio", self.controller.mostrar_inicio),
+            ("Punto de venta", self.controller.mostrar_punto_venta),
+            ("Análisis Spark", self.controller.mostrar_analisis_spark),
         ]
 
         for texto, comando in opciones:
@@ -55,7 +55,7 @@ class InicioView:
         # Sección: Gestionar Inventario (título + 3 botones debajo)
         # ---------------------------------------------------------------------
         titulo_inv = tk.Label(self.menu_frame,
-                              text="🛠️ Gestionar Inventario",
+                              text="Gestionar Inventario",
                               bg=UIHelper.COLOR_TERCIARIO,
                               fg=UIHelper.COLOR_TEXTO,
                               font=("Segoe UI", 10, "bold"),
