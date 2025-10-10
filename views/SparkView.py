@@ -17,7 +17,7 @@ class SparkView:
 
     def crear_vista(self):
         """Crear la interfaz gráfica del análisis Spark"""
-        UIHelper.configurar_estilo_modo_oscuro()
+        UIHelper.configurar_estilo_ttk()
 
         self.root.title("Análisis Completo de Supermercado")
         self.root.geometry("1000x800")

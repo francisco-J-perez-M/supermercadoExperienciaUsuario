@@ -13,7 +13,7 @@ class PuntoVentaView:
 
     def crear_vista_principal(self):
         # Configurar estilo oscuro para ttk
-        UIHelper.configurar_estilo_modo_oscuro()
+        UIHelper.configurar_estilo_ttk()
         
         self.root.title("Supermercado - Punto de Venta")
         self.root.geometry("900x550")

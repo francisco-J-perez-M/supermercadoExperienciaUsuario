@@ -27,7 +27,7 @@ class UsuariosView(tk.Frame):
 
     def __init__(self, master=None):
         super().__init__(master, bg=UIHelper.COLOR_PRIMARIO)
-        UIHelper.configurar_estilo_modo_oscuro()
+        UIHelper.configurar_estilo_ttk()
         self.master = master
         self.current_page = 0
         self.search_q = tk.StringVar()
