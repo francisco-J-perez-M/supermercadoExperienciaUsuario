@@ -7,6 +7,7 @@ from views.cruds.Productos import ProductosView
 from views.cruds.Clientes import ClientesView
 from controllers.PuntoVentaController import PuntoVentaController
 from controllers.SparkController import SparkController
+from controllers.MultimediaController import MultimediaController  # Nuevo import
 
 class InicioController:
     def __init__(self):
@@ -14,6 +15,7 @@ class InicioController:
         self.view = None
         self.usuario = None
         self.rol = None
+        self.multimedia_controller = None  # Controlador multimedia
 
     def mostrar_inicio(self):
         try:
@@ -55,6 +57,28 @@ class InicioController:
             spark_controller.iniciar_analisis()
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo abrir Análisis Spark: {e}")
+
+    def mostrar_multimedia(self):
+        """Muestra el visualizador multimedia dentro del content_frame"""
+        try:
+            self.view.limpiar_contenido()
+            
+            # Crear frame contenedor para multimedia
+            multimedia_container = tk.Frame(self.view.content_frame, bg=self.view.content_frame.cget('bg'))
+            multimedia_container.pack(fill="both", expand=True, padx=10, pady=10)
+            
+            # Inicializar controlador multimedia si no existe
+            if not self.multimedia_controller:
+                self.multimedia_controller = MultimediaController(self.root)
+            
+            # Crear e integrar la vista multimedia
+            from views.MultimediaView import MultimediaView
+            multimedia_view = MultimediaView(multimedia_container, self.multimedia_controller)
+            self.multimedia_controller.set_view(multimedia_view)
+            multimedia_view.crear_vista()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo abrir Visualizador Multimedia: {e}")
 
     def cerrar_sesion(self):
         if messagebox.askyesno("Cerrar Sesión", "¿Seguro que deseas salir?"):
