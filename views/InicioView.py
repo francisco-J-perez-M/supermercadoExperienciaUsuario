@@ -36,6 +36,7 @@ class InicioView:
             ("Inicio", self.controller.mostrar_inicio),
             ("Punto de venta", self.controller.mostrar_punto_venta),
             ("Análisis Spark", self.controller.mostrar_analisis_spark),
+            ("📷 Multimedia", self.controller.mostrar_multimedia),  # Nueva opción añadida
         ]
 
         for texto, comando in opciones:
@@ -120,6 +121,7 @@ class InicioView:
             "• Punto de venta",
             "• Análisis de datos con Spark",
             "• Gestión de inventario (Usuarios, Productos, Clientes)",
+            "• 📷 Visualizador Multimedia",  # Nueva función añadida
         ]
 
         for funcion in funciones:
@@ -129,3 +131,15 @@ class InicioView:
                                    bg=UIHelper.COLOR_PRIMARIO,
                                    fg=UIHelper.COLOR_TEXTO_SECUNDARIO)
             lbl_funcion.pack(anchor="w", pady=2)
+
+    def mostrar_multimedia(self):
+        """Muestra la vista del visualizador multimedia"""
+        self.limpiar_contenido()
+        
+        # Crear un frame contenedor para el visualizador multimedia
+        multimedia_frame = tk.Frame(self.content_frame, bg=UIHelper.COLOR_PRIMARIO)
+        multimedia_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Aquí integrarías el visualizador multimedia
+        # Por ejemplo:
+        self.controller.mostrar_vista_multimedia(multimedia_frame)
